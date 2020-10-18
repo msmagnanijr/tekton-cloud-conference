@@ -1,0 +1,14 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: webhook-listener-url
+spec:
+  rules:
+  - host: tekton-webhook-listener.mmagnani.lab
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: el-gitlab-listener
+          servicePort: 8080

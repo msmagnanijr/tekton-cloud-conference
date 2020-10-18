@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline-build-and-push
+spec:
+  workspaces:
+  - name: local-maven-repo
+  resources:
+    - name: src
+      type: git
+  tasks:
+  - name: pipeline-build-push
+    taskRef:
+      name: cloud-monitor-build-push
+    params:
+      - name: directory
+        value: .
+    resources:
+      inputs:
+        - name: src
+          resource: src
+    workspaces:
+    - name: maven-repo
+      workspace: local-maven-repo
+  - name: send-telegram-message
+    runAfter: [pipeline-build-push]
+    taskRef:
+      name: send-to-telegram
+    params:
+      - name: bot-token-secret
+        value: telegram-bot-token-secret
+      - name: message
+        value: "Build e Push do projeto Cloud Monitor Backend realizado com sucesso."
+      - name: chat-id
+        value: "-445603360"

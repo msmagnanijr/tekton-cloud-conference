@@ -1,0 +1,16 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: pipeline-run
+spec:
+  serviceAccountName: pipeline
+  pipelineRef:
+    name: pipeline-build-and-push
+  resources:
+    - name: src
+      resourceRef:
+        name: git-project
+  workspaces:
+    - name: local-maven-repo
+      persistentVolumeClaim:
+        claimName: maven-repo-pvc

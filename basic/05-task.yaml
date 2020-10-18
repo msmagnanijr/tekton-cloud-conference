@@ -1,0 +1,45 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: cloud-monitor-build-push
+spec:
+  workspaces:
+  - name: maven-repo
+  inputs:
+    params:
+    - name: directory
+      description: The directory containing the app, relative to the source repository root
+      default: .
+    - name: cache
+      description: The name of the volume for caching Maven artifacts and base image layers
+      default: empty-dir-volume
+    - name: ARGS
+      description: The OpenShift CLI arguments to run
+      type: array
+      default:
+      - "help"
+    resources:
+    - name: src
+      type: git
+  steps:
+   - name: build-and-push
+     image: gcr.io/cloud-builders/mvn
+     command:
+     - mvn
+     - clean
+     - package
+     - -Duser.home=/builder/home
+     - -Dquarkus.container-image.push=true
+     - -Dmaven.repo.local=$(workspaces.maven-repo.path)
+     - -Djib.allowInsecureRegistries=true
+     workingDir: /workspace/src/$(inputs.params.directory)
+     volumeMounts:
+     - name: $(inputs.params.cache)
+       mountPath: /builder/home/.m2
+       subPath: m2-cache
+     - name: $(inputs.params.cache)
+       mountPath: /builder/home/.cache
+       subPath: jib-cache
+  volumes:
+  - name: empty-dir-volume
+    emptyDir: {}
